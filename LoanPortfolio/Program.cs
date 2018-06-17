@@ -24,9 +24,13 @@ namespace LoanPortfolio
             var engine = new FileHelperEngine<LoanInput>();
             var result = engine.ReadFile(fileName);
 
-            IList<LoanInput> loanslist = result.ToList();
-
-
+            IList<LoanInput> inLoansList = result.ToList();
+            IList<Loan> loansList = new List<Loan>();
+            foreach (var inLoan in inLoansList)
+            {
+                var loan = new Loan(inLoan);
+                loansList.Add(loan);
+            }
             //convert to complete loan with all details
 
             //show results
