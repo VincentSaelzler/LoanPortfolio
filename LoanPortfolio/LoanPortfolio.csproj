@@ -48,6 +48,7 @@
     <Compile Include="Loan.cs" />
     <Compile Include="LoanInput.cs" />
     <Compile Include="Payment.cs" />
+    <Compile Include="PaymentOutput.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

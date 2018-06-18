@@ -16,7 +16,7 @@ namespace LoanPortfolio
         public decimal MinPmtAmount { get; set; }
         public decimal InterestRate { get; set; }
         public decimal MonthlyInterestRate { get { return InterestRate / NumMonthsInYear; } }
-        IDictionary<string, IList<Payment>> PaymentScenarios { get; set; }
+        public IDictionary<string, IList<Payment>> PaymentScenarios { get; set; }
 
         public Loan(LoanInput loanInput)
         {
