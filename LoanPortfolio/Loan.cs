@@ -12,52 +12,81 @@ namespace LoanPortfolio
 
         public string Description { get; set; }
         public DateTime FirstPmtDate { get; set; }
-        public decimal Principal { get; set; }
-        public decimal PmtAmount { get; set; }
+        public decimal PrincipalBorrowed { get; set; }
+        public decimal MinPmtAmount { get; set; }
         public decimal InterestRate { get; set; }
         public decimal MonthlyInterestRate { get { return InterestRate / NumMonthsInYear; } }
-        public decimal TotalPrincipalPaid { get { return Payments.Sum(p => p.Principal); } }
-
-        IList<Payment> Payments { get; set; }
+        IDictionary<string, IList<Payment>> PaymentScenarios { get; set; }
 
         public Loan(LoanInput loanInput)
         {
             Description = loanInput.Description;
             FirstPmtDate = loanInput.FirstPmtDate;
-            Principal = loanInput.Principal;
-            PmtAmount = loanInput.PmtAmount;
+            PrincipalBorrowed = loanInput.Principal;
+            MinPmtAmount = loanInput.PmtAmount;
             InterestRate = loanInput.InterestRate;
+            PaymentScenarios = new Dictionary<string, IList<Payment>>();
+            var Payments = new List<Payment>();
+            PaymentScenarios.Add("Minimum Payments", Payments);
 
-            decimal remainingPrincipal = Principal;
-            decimal interestPaid = 0;
-            int pmtNumber = 0;
-
-            Payments = new List<Payment>();
+            decimal amtPaid;
             do
             {
-                pmtNumber++;
-
-                
-
-                var p = new Payment();
-                p.PmtNumber = pmtNumber;
-                p.Interest = remainingPrincipal * MonthlyInterestRate;
-
-
-                p.Principal = PmtAmount - p.Interest;
-                //if (pmtNumber == 1) { p.Principal += 300; }
-
-
-                interestPaid += p.Interest;
-                remainingPrincipal -= p.Principal;
-
-                Payments.Add(p);
-
-
-            } while (remainingPrincipal > 0);
-
+                amtPaid = MakePayment(MinPmtAmount, Payments);
+            } while (amtPaid > 0);
         }
 
+        public decimal MakePayment(decimal maxPmtAmount, IList<Payment> payments)
+        {
+            //get the last payment or a pseudo "zero-ith" payment if none yet exist
+            var lastPayment =
+                payments.OrderBy(p => p.PmtNumber).LastOrDefault() ??
+                new Payment()
+                {
+                    PmtNumber = 0,
+                    CurrentPrincipal = 0,
+                    CurrentInterest = 0,
+                    TotalPrincipal = PrincipalBorrowed,
+                    TotalPayment = 0,
+                    TotalInterest = 0
+                };
 
+            //decide whether to make another payment
+            if (lastPayment.TotalPrincipal == 0)
+            {
+                return 0;
+            }
+            if (lastPayment.TotalPrincipal < 0)
+            {
+                throw new ArgumentOutOfRangeException();
+            }
+
+            //create tne new payment and calculate interest
+            var payment = new Payment()
+            {
+                CurrentInterest = lastPayment.TotalPrincipal * MonthlyInterestRate,
+                PmtNumber = lastPayment.PmtNumber + 1
+            };
+
+            //pay as much as possible (or all) remaining principal
+            if (maxPmtAmount < lastPayment.TotalPrincipal + payment.CurrentInterest)
+            {
+                payment.CurrentPrincipal = maxPmtAmount - payment.CurrentInterest;
+            }
+            else
+            {
+                payment.CurrentPrincipal = lastPayment.TotalPrincipal;
+            }
+
+            //update running totals
+            payment.TotalInterest = lastPayment.TotalInterest + payment.CurrentInterest;
+            payment.TotalPrincipal = lastPayment.TotalPrincipal - payment.CurrentPrincipal;
+            payment.TotalPayment = lastPayment.TotalPayment + payment.CurrentPayment;
+
+            //add to list of payments
+            payments.Add(payment);
+
+            return payment.CurrentPayment;
+        }
     }
 }

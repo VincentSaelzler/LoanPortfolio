@@ -19,8 +19,6 @@ namespace LoanPortfolio
             const string fileName = @"C:\Users\vince\Downloads\Bills Google Sheet - Loan Portfolio.csv";
             Console.WriteLine($"Using {fileName}");
 
-
-
             var engine = new FileHelperEngine<LoanInput>();
             var result = engine.ReadFile(fileName);
 

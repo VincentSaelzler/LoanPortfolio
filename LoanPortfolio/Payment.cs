@@ -9,8 +9,13 @@ namespace LoanPortfolio
     class Payment
     {
         public int PmtNumber { get; set; }
-        public decimal Principal { get; set; }
-        public decimal Interest { get; set; }
-        public decimal TotalPmt { get { return Principal + Interest; } }
+
+        public decimal CurrentInterest { get; set; }
+        public decimal CurrentPrincipal { get; set; }
+        public decimal CurrentPayment { get { return CurrentPrincipal + CurrentInterest; } }
+
+        public decimal TotalPrincipal { get; set; }
+        public decimal TotalInterest { get; set; }
+        public decimal TotalPayment { get; set; }
     }
 }
