@@ -19,17 +19,27 @@ namespace LoanPortfolio
             const string fileName = @"C:\Users\vince\Downloads\Bills Google Sheet - Loan Portfolio.csv";
             Console.WriteLine($"Using {fileName}");
 
+            //convert to complete loan with all details
             var engine = new FileHelperEngine<LoanInput>();
             var result = engine.ReadFile(fileName);
+            var loansList = result.Select(il => new Loan(il));
 
-            IList<LoanInput> inLoansList = result.ToList();
-            IList<Loan> loansList = new List<Loan>();
-            foreach (var inLoan in inLoansList)
+            //if this is an enumerable, it's a QUERY
+            //changes made within the foreach loop don't stay saved
+            var loansListByRate = loansList.OrderByDescending(l => l.InterestRate).ToList();
+
+            decimal extraMoney = 100;
+            var scenarioName = "$100";
+
+            do
             {
-                var loan = new Loan(inLoan);
-                loansList.Add(loan);
-            }
-            //convert to complete loan with all details
+                foreach (var l in loansListByRate)
+                {
+                    var amountToPay = l.MinPmtAmount + extraMoney;
+                    var amountPaid = l.MakePayment(amountToPay, scenarioName);
+                }
+            } while (loansListByRate.Where(l => l.CheckCompletion(scenarioName) == false).Count() > 0);
+
 
             //show results
 

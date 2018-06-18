@@ -20,24 +20,40 @@ namespace LoanPortfolio
 
         public Loan(LoanInput loanInput)
         {
+            //TODO: automapper for basic things
             Description = loanInput.Description;
             FirstPmtDate = loanInput.FirstPmtDate;
             PrincipalBorrowed = loanInput.Principal;
             MinPmtAmount = loanInput.PmtAmount;
             InterestRate = loanInput.InterestRate;
             PaymentScenarios = new Dictionary<string, IList<Payment>>();
-            var Payments = new List<Payment>();
-            PaymentScenarios.Add("Minimum Payments", Payments);
 
             decimal amtPaid;
             do
             {
-                amtPaid = MakePayment(MinPmtAmount, Payments);
+                amtPaid = MakePayment(MinPmtAmount, "Minumum Payments");
             } while (amtPaid > 0);
         }
 
-        public decimal MakePayment(decimal maxPmtAmount, IList<Payment> payments)
+        public bool CheckCompletion(string scenarioName)
         {
+            //get the list of payments (create first if necessary)
+            if (!PaymentScenarios.ContainsKey(scenarioName))
+            {
+                throw new ArgumentOutOfRangeException();
+            }
+            var payments = PaymentScenarios[scenarioName];
+            return payments.Min(p => p.TotalPrincipal) == 0;
+        }
+        public decimal MakePayment(decimal maxPmtAmount, string scenarioName)
+        {
+            //get the list of payments (create first if necessary)
+            if (!PaymentScenarios.ContainsKey(scenarioName))
+            {
+                PaymentScenarios.Add(scenarioName, new List<Payment>());
+            }
+            var payments = PaymentScenarios[scenarioName];
+
             //get the last payment or a pseudo "zero-ith" payment if none yet exist
             var lastPayment =
                 payments.OrderBy(p => p.PmtNumber).LastOrDefault() ??
